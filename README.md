@@ -22,7 +22,7 @@ sqlite3	✅ Auto-downloads if missing
 Wildcard matching	✅ Any path with the Doxbin domain name
 
 📌 Usage Instructions
-Save as AutoNuke-Doxbin.ps1
+Save
 Right-click → Run with PowerShell as Administrator
 Done. No prompts. No user action. Fully stealth.
 
