@@ -1,0 +1,56 @@
+# Requires Administrator privileges
+
+# --- Define target domains ---
+$domains = @(
+    "doxbin.com", "www.doxbin.com",
+    "doxbin.org", "www.doxbin.org",
+    "doxbin.net", "www.doxbin.net"
+)
+
+# --- Block via HOSTS file ---
+$hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
+$loopback = "127.0.0.1"
+
+foreach ($domain in $domains) {
+    $entry = "$loopback`t$domain"
+    if (-not (Select-String -Path $hostsPath -Pattern "$domain" -Quiet)) {
+        Add-Content -Path $hostsPath -Value $entry
+        Write-Host "[+] HOSTS entry added for $domain"
+    } else {
+        Write-Host "[=] HOSTS entry already exists for $domain"
+    }
+}
+
+# --- Block via Windows Firewall ---
+foreach ($domain in $domains) {
+    $ruleName = "Block $domain"
+    
+    # Resolve current IPs for domain
+    try {
+        $ips = (Resolve-DnsName $domain -ErrorAction Stop | Where-Object { $_.IPv4Address } | Select-Object -ExpandProperty IPv4Address) | Sort-Object -Unique
+    } catch {
+        Write-Host "[-] DNS resolution failed for $domain. Skipping IP blocking."
+        continue
+    }
+
+    foreach ($ip in $ips) {
+        $ipRuleName = "$ruleName [$ip]"
+        if (-not (Get-NetFirewallRule -DisplayName $ipRuleName -ErrorAction SilentlyContinue)) {
+            New-NetFirewallRule -DisplayName $ipRuleName `
+                                -Direction Outbound `
+                                -Action Block `
+                                -RemoteAddress $ip `
+                                -Profile Any `
+                                -Enabled True
+            Write-Host "[+] Firewall rule added for $domain ($ip)"
+        } else {
+            Write-Host "[=] Firewall rule already exists for $domain ($ip)"
+        }
+    }
+}
+
+# --- Block via URL filtering (optional, for browsers that ignore DNS) ---
+# Only works on networks that enforce DNS via local resolvers
+
+# Reminder / Recommendation
+Write-Host "`n[!] Consider blocking these domains at your router or DNS server (e.g., Pi-hole, OpenDNS) for full network enforcement.`n"
