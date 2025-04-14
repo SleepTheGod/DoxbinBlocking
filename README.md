@@ -1,3 +1,4 @@
+```
 ✅ Domain Blocking
 Blocks doxbin.com, .org, .net (including subdomains)
 Adds to HOSTS file
@@ -24,3 +25,5 @@ Wildcard matching	✅ Any path with the Doxbin domain name
 Save as AutoNuke-Doxbin.ps1
 Right-click → Run with PowerShell as Administrator
 Done. No prompts. No user action. Fully stealth.
+
+```
